@@ -70,12 +70,12 @@ internal abstract class MangaFireParser(
 
     private val client: WebClient by lazy {
         val newHttpClient = context.httpClient.newBuilder()
-            .sslSocketFactory(SSLUtils.sslSocketFactory!!, SSLUtils.trustManager)
-            .hostnameVerifier { _, _ -> true }
             .addInterceptor { chain ->
                 val request = chain.request()
                 val response = chain.proceed(request.newBuilder()
-                    .addHeader("Referer", "https://$domain/")
+                    .header("User-Agent", UserAgents.CHROME_DESKTOP)
+                    .header("Referer", "https://$domain/")
+                    .header("Origin", "https://$domain")
                     .build())
 
                 if (request.url.fragment?.startsWith("scrambled") == true) {
@@ -126,19 +126,12 @@ internal abstract class MangaFireParser(
 
 	override val configKeyDomain: ConfigKey.Domain = ConfigKey.Domain("mangafire.to")
 
-	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
-		SortOrder.UPDATED,
-		SortOrder.POPULARITY,
-		SortOrder.RATING,
-		SortOrder.NEWEST,
-		SortOrder.ALPHABETICAL,
-		SortOrder.RELEVANCE,
-	)
+    override val userAgentKey = ConfigKey.UserAgent(UserAgents.CHROME_DESKTOP)
 
-	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
-		super.onCreateConfig(keys)
-		keys.add(userAgentKey)
-	}
+    override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
+        super.onCreateConfig(keys)
+        keys.add(userAgentKey)
+    }
 
 	override val authUrl: String
 		get() = "https://${domain}"
